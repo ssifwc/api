@@ -60,7 +60,7 @@ class Database:
 
     def select_greenwood(self):
 
-        sql = "SELECT id, 'greenwood' AS name, geom coordinates FROM greenwood"
+        sql = "SELECT id, 'greenwood' AS name, geom point FROM greenwood"
 
         return self._fetchall(sql)
 
