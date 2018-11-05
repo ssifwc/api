@@ -1,0 +1,2 @@
+psycopg2-binary==2.7.5
+Shapely==1.6.4.post1

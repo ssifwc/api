@@ -1,0 +1,48 @@
+service: ssifwc-api
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: python3.6
+
+functions:
+  api:
+    handler: ssifwc.handler.endpoint
+    name: api
+    events:
+      - http:
+          path: watersheds
+          method: get
+          cors: true
+      - http:
+          path: epicollect
+          method: get
+          cors: true
+      - http:
+          path: epicollect
+          method: post
+          cors: true
+      - http:
+          path: aquifers
+          method: get
+          cors: true
+      - http:
+          path: culverts
+          method: get
+          cors: true
+      - http:
+          path: faults
+          method: get
+          cors: true
+      - http:
+          path: greenwood
+          method: get
+          cors: true
+    environment:
+      DATABASE_CONNECTION_URI: ${file(./serverless.env.yml):${self:provider.stage}.DATABASE_CONNECTION_URI}
+
+plugins:
+  - serverless-python-requirements
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
