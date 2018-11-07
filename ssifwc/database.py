@@ -86,6 +86,10 @@ class Database:
                 flow_rate_quantity_2, 
                 flow_rate_quantity_3, 
                 ph, 
+                photo_view_upstr,
+                photo_view_downstream,
+                additional_photo_1,
+                additional_photo_2,
                 temperature, 
                 conductivity, 
                 other_comments
