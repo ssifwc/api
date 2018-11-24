@@ -23,6 +23,10 @@ functions:
           method: post
           cors: true
       - http:
+          path: image
+          method: post
+          cors: true
+      - http:
           path: aquifers
           method: get
           cors: true
@@ -40,6 +44,10 @@ functions:
           cors: true
     environment:
       DATABASE_CONNECTION_URI: ${file(./serverless.env.yml):${self:provider.stage}.DATABASE_CONNECTION_URI}
+      EPICOLLECT_BASE_URL: ${file(./serverless.env.yml):${self:provider.stage}.EPICOLLECT_BASE_URL}
+      EPICOLLECT_PROJECT_NAME: ${file(./serverless.env.yml):${self:provider.stage}.EPICOLLECT_PROJECT_NAME}
+      EPICOLLECT_CLIENT_ID: ${file(./serverless.env.yml):${self:provider.stage}.EPICOLLECT_CLIENT_ID}
+      EPICOLLECT_CLIENT_SECRET: ${file(./serverless.env.yml):${self:provider.stage}.EPICOLLECT_CLIENT_SECRET}
 
 plugins:
   - serverless-python-requirements

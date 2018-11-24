@@ -17,7 +17,8 @@ get_routes = {
 }
 
 post_routes = {
-    Resource.Epicollect.value: router.get_epicollect_points_by_uuids
+    Resource.Epicollect.value: router.get_epicollect_points_by_uuids,
+    Resource.Image.value: router.get_epicollect_image_by_id
 }
 
 

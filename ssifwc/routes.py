@@ -1,6 +1,8 @@
+import os
 import json
 from enum import Enum
 
+from ssifwc.epicollect import Epicollect
 from ssifwc.helpers import serialise_polygons, serialise_points, serialise_lines, json_serial
 
 
@@ -12,6 +14,7 @@ class Resource(Enum):
     Culverts = 'culverts'
     Faults = 'faults'
     Greenwood = 'greenwood'
+    Image = 'image'
 
 
 class Router:
@@ -69,17 +72,30 @@ class Router:
 
         return self._create_response(points)
 
+    def get_epicollect_image_by_id(self, body):
+
+        epicollect = Epicollect(
+            base_url=os.environ['EPICOLLECT_BASE_URL'],
+            project_name=os.environ['EPICOLLECT_PROJECT_NAME'],
+            client_id=os.environ['EPICOLLECT_CLIENT_ID'],
+            client_secret=os.environ['EPICOLLECT_CLIENT_SECRET']
+        )
+
+        url, access_token = epicollect.get_media_url(image_id=body['id'])
+
+        return self._create_response({'url': url, 'access_token': access_token})
+
+    def _create_response(self, body):
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps(body, default=json_serial),
+            "headers": self._get_headers()
+        }
+
     @staticmethod
-    def _create_response(body):
-        headers = {
+    def _get_headers():
+        return {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Credentials': True,
         }
-
-        response = {
-            "statusCode": 200,
-            "body": json.dumps(body, default=json_serial),
-            "headers": headers
-        }
-
-        return response
