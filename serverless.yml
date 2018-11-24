@@ -15,6 +15,18 @@ functions:
           method: get
           cors: true
       - http:
+          path: wells
+          method: get
+          cors: true
+      - http:
+          path: parcels
+          method: get
+          cors: true
+      - http:
+          path: springs
+          method: get
+          cors: true
+      - http:
           path: epicollect
           method: get
           cors: true

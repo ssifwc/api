@@ -11,9 +11,11 @@ get_routes = {
     Resource.Watersheds.value: router.get_watersheds,
     Resource.Epicollect.value: router.get_epicollect,
     Resource.Aquifers.value: router.get_aquifers,
-    Resource.Culverts.value: router.get_culverts,
+    Resource.Parcels.value: router.get_parcels,
     Resource.Faults.value: router.get_faults,
-    Resource.Greenwood.value: router.get_greenwood
+    Resource.Greenwood.value: router.get_greenwood,
+    Resource.Springs.value: router.get_springs,
+    Resource.Wells.value: router.get_waterwells
 }
 
 post_routes = {

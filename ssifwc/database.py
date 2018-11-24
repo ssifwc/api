@@ -34,6 +34,34 @@ class Database:
 
         return self._fetchall(sql)
 
+    def select_waterwells(self):
+
+        sql = """
+        select id, geom point, 
+        json_build_object('water_depth', water_depth, 'bedrock_depth', bedrock_depth, 'elevation', elevation, 
+                          'general_remarks', general_remarks, 'yield_value', yield_value, 'url', url) meta
+        from wells
+        """
+        return self._fetchall(sql)
+
+    def select_springs(self):
+
+        sql = """
+        select id, geom point, 
+        json_build_object('stream_name', stream_name, 'purpose', purpose, 'quantity', quantity, 'units', units) meta
+        from spring 
+        """
+
+        return self._fetchall(sql)
+
+    def select_parcels(self):
+
+        sql = """
+        select id, geom coordinates, json_build_object() meta
+        from parcel
+        """
+        return self._fetchall(sql)
+
     def select_epicollect(self):
 
         sql = 'SELECT uuid id, title, where_am_i point, ph, temperature, conductivity FROM epicollect_observations'
@@ -42,13 +70,12 @@ class Database:
 
     def select_aquifers(self):
 
-        sql = 'SELECT id, name, geom coordinates FROM aquifers'
-
-        return self._fetchall(sql)
-
-    def select_culverts(self):
-
-        sql = "SELECT id, name, geom coordinates FROM culverts"
+        sql = """
+        select id, geom coordinates,
+        json_build_object('materials', materials, 'productivity', productivity, 'vulnerability', vulnerability, 
+        'demand', demand, 'location_description', location_description, 'url', url, 'type_of_water_use', type_of_water_use) meta
+        from aquifers
+        """
 
         return self._fetchall(sql)
 
@@ -60,7 +87,10 @@ class Database:
 
     def select_greenwood(self):
 
-        sql = "SELECT id, 'greenwood' AS name, geom point FROM greenwood"
+        sql = """
+        select id, geom coordinates, json_build_object('name', name, 'description', description) meta
+        from geology
+        """
 
         return self._fetchall(sql)
 

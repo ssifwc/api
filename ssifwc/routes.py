@@ -10,8 +10,10 @@ class Resource(Enum):
 
     Epicollect = 'epicollect'
     Watersheds = 'watersheds'
+    Wells = 'wells'
+    Springs = 'springs'
+    Parcels = 'parcels'
     Aquifers = 'aquifers'
-    Culverts = 'culverts'
     Faults = 'faults'
     Greenwood = 'greenwood'
     Image = 'image'
@@ -30,6 +32,20 @@ class Router:
 
         return self._create_response(polygons)
 
+    def get_waterwells(self):
+
+        water_wells = self._database.select_waterwells()
+        points = serialise_points(water_wells)
+
+        return self._create_response(points)
+
+    def get_springs(self):
+
+        springs = self._database.select_springs()
+        points = serialise_points(springs)
+
+        return self._create_response(points)
+
     def get_epicollect(self):
 
         epicollect = self._database.select_epicollect()
@@ -44,12 +60,12 @@ class Router:
 
         return self._create_response(polygons)
 
-    def get_culverts(self):
+    def get_parcels(self):
 
-        culverts = self._database.select_culverts()
-        points = serialise_points(culverts)
+        parcels = self._database.select_parcels()
+        polygons = serialise_polygons(parcels)
 
-        return self._create_response(points)
+        return self._create_response(polygons)
 
     def get_faults(self):
 
@@ -61,9 +77,9 @@ class Router:
     def get_greenwood(self):
 
         greenwood = self._database.select_greenwood()
-        points = serialise_points(greenwood)
+        polygons = serialise_polygons(greenwood)
 
-        return self._create_response(points)
+        return self._create_response(polygons)
 
     def get_epicollect_points_by_uuids(self, body):
 
