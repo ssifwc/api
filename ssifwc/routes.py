@@ -105,15 +105,18 @@ class Router:
     def get_metrics_by_epicollect_uuid(self, body):
 
         metrics = self._database.select_metrics(uuid=body['uuid'])
+        created_at = metrics['created_at']
 
-        return self._create_response(
-            {'created_at': metrics['created_at'],
-             'temperature': metrics['temperature'],
-             'conductivity': metrics['conductivity'],
-             'ph': metrics['ph'],
-             'flow_rate_1': metrics['flow_rate_1'],
-             'flow_rate_2': metrics['flow_rate_2'],
-             'flow_rate_3': metrics['flow_rate_3']})
+        temperature = [{'value': value, 'name': time} for (value, time) in zip(metrics['temperature'], created_at)]
+        conductivity = [{'value': value, 'name': time} for (value, time) in zip(metrics['conductivity'], created_at)]
+        ph = [{'value': value, 'name': time} for (value, time) in zip(metrics['ph'], created_at)]
+        flow_rate_1 = [{'value': value, 'name': time} for (value, time) in zip(metrics['flow_rate_1'], created_at)]
+        flow_rate_2 = [{'value': value, 'name': time} for (value, time) in zip(metrics['flow_rate_2'], created_at)]
+        flow_rate_3 = [{'value': value, 'name': time} for (value, time) in zip(metrics['flow_rate_3'], created_at)]
+
+        return self._create_response({'temperature': temperature, 'conductivity': conductivity, 'ph': ph,
+                                      'flow_rate_1': flow_rate_1, 'flow_rate_2': flow_rate_2,
+                                      'flow_rate_3': flow_rate_3})
 
     def _create_response(self, body):
 
