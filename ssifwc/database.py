@@ -30,7 +30,10 @@ class Database:
 
     def select_watersheds(self):
 
-        sql = "SELECT id, 'watershed' AS name, geom coordinates FROM watersheds"
+        sql = """
+        select id, geom coordinates, json_build_object('name', name) meta
+        from watersheds_crd
+        """
 
         return self._fetchall(sql)
 
