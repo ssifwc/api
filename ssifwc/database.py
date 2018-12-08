@@ -132,6 +132,32 @@ class Database:
         self._cursor.execute(sql, (uuids,))
         return self._cursor.fetchall()
 
+    def select_metrics(self, uuid):
+
+        sql = """
+            with buffer as (
+                select ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(where_am_i, 4326), 3857), 15), 4326) geom
+                from epicollect_observations
+                where uuid  = %s
+            )
+            select 
+                array_agg(created_at) created_at, 
+                array_agg(temperature) temperature, 
+                array_agg(conductivity) conductivity, 
+                array_agg(ph) ph, 
+                array_agg(flow_rate_quantity_1) flow_rate_1, 
+                array_agg(flow_rate_quantity_2) flow_rate_2, 
+                array_agg(flow_rate_quantity_3) flow_rate_3
+            from (
+                    select created_at, temperature, conductivity, ph, flow_rate_quantity_1, flow_rate_quantity_2, flow_rate_quantity_3
+                    from buffer, epicollect_observations points
+                    where ST_Within(ST_SetSRID(points.where_am_i, 4326), buffer.geom)
+                    order by created_at
+                ) v
+        """
+        self._cursor.execute(sql, (uuid,))
+        return self._cursor.fetchone()
+
     def _fetchall(self, sql):
 
         self._cursor.execute(sql)

@@ -54,6 +54,10 @@ functions:
           path: greenwood
           method: get
           cors: true
+      - http:
+          path: metrics
+          method: post
+          cors: true
     environment:
       DATABASE_CONNECTION_URI: ${file(./serverless.env.yml):${self:provider.stage}.DATABASE_CONNECTION_URI}
       EPICOLLECT_BASE_URL: ${file(./serverless.env.yml):${self:provider.stage}.EPICOLLECT_BASE_URL}

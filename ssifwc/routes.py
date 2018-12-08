@@ -17,6 +17,7 @@ class Resource(Enum):
     Faults = 'faults'
     Greenwood = 'greenwood'
     Image = 'image'
+    Metrics = 'metrics'
 
 
 class Router:
@@ -100,6 +101,19 @@ class Router:
         url, access_token = epicollect.get_media_url(image_id=body['id'])
 
         return self._create_response({'url': url, 'access_token': access_token})
+
+    def get_metrics_by_epicollect_uuid(self, body):
+
+        metrics = self._database.select_metrics(uuid=body['uuid'])
+
+        return self._create_response(
+            {'created_at': metrics['created_at'],
+             'temperature': metrics['temperature'],
+             'conductivity': metrics['conductivity'],
+             'ph': metrics['ph'],
+             'flow_rate_1': metrics['flow_rate_1'],
+             'flow_rate_2': metrics['flow_rate_2'],
+             'flow_rate_3': metrics['flow_rate_3']})
 
     def _create_response(self, body):
 
