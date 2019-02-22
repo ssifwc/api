@@ -67,7 +67,13 @@ class Database:
 
     def select_epicollect(self):
 
-        sql = 'SELECT uuid id, title, where_am_i point, ph, temperature, conductivity FROM epicollect_observations'
+        sql = """
+        SELECT uuid id, title, where_am_i point, ph, temperature, conductivity, '1' epicollect_version
+        FROM epicollect_observations
+        union
+        select uuid id, title, coord point, cast(nullif(ph, '') as double precision), cast(nullif(temperature, '') as double precision), cast(nullif(conductivity, '') as double precision), '2' epicollect_version
+        from epicollect_observations_v2
+        """
 
         return self._fetchall(sql)
 
@@ -97,6 +103,37 @@ class Database:
 
         return self._fetchall(sql)
 
+    def select_epicollect_v2_points_by_uuids(self, uuids):
+
+        sql = """
+        select 
+            uuid id,
+            title,
+            coord point,
+            locname named_location_if_known,
+            null water_matters,
+            array[null] watershed,
+            created_at,
+            last_sig_precipitation last_significant_precipitation_event,
+            safe_to_work safe_to_work_at_this_location,
+            name name_initials_or_nickname,
+            visit_type type_of_visit,
+            water_body_type,
+            null likely_permenance,
+            rate_of_flow rate_of_flow_qualitative,
+            flow_rate_average,
+            ph,
+            array[photo, photo_of_water_le, photo_view_downst, photos] photos,
+            temperature,
+            conductivity,
+            other_comments
+        from epicollect_observations_v2
+        where uuid::text = any(%s)
+        """
+
+        self._cursor.execute(sql, (uuids,))
+        return self._cursor.fetchall()
+
     def select_epicollect_points_by_uuids(self, uuids):
 
         sql = """
@@ -119,10 +156,7 @@ class Database:
                 flow_rate_quantity_2, 
                 flow_rate_quantity_3, 
                 ph, 
-                photo_view_upstr,
-                photo_view_downstream,
-                additional_photo_1,
-                additional_photo_2,
+                array[photo_view_upstr, photo_view_downstream, additional_photo_1, additional_photo_2] photos,
                 temperature, 
                 conductivity, 
                 other_comments
@@ -132,30 +166,28 @@ class Database:
         self._cursor.execute(sql, (uuids,))
         return self._cursor.fetchall()
 
-    def select_metrics(self, uuid):
+    def select_metrics(self, uuid, radius):
 
         sql = """
             with buffer as (
-                select ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(where_am_i, 4326), 3857), 15), 4326) geom
-                from epicollect_observations
-                where uuid  = %s
+                select ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(where_am_i, 4326), 3857), %s), 4326) geom
+                from v_all_points
+                where uuid = %s
             )
-            select 
-                array_agg(created_at) created_at, 
-                array_agg(temperature) temperature, 
-                array_agg(conductivity) conductivity, 
-                array_agg(ph) ph, 
-                array_agg(flow_rate_quantity_1) flow_rate_1, 
-                array_agg(flow_rate_quantity_2) flow_rate_2, 
-                array_agg(flow_rate_quantity_3) flow_rate_3
+            select
+                array_agg(created_at) created_at,
+                array_agg(temperature) temperature,
+                array_agg(conductivity) conductivity,
+                array_agg(ph) ph,
+                array_agg(flow_rate) flow_rate
             from (
-                    select created_at, temperature, conductivity, ph, flow_rate_quantity_1, flow_rate_quantity_2, flow_rate_quantity_3
-                    from buffer, epicollect_observations points
-                    where ST_Within(ST_SetSRID(points.where_am_i, 4326), buffer.geom)
-                    order by created_at
-                ) v
+                select created_at, temperature, conductivity, ph, flow_rate
+                from buffer, v_all_points points
+                where ST_Within(ST_SetSRID(points.where_am_i, 4326), buffer.geom)
+                order by created_at
+            ) v
         """
-        self._cursor.execute(sql, (uuid,))
+        self._cursor.execute(sql, (radius, uuid,))
         return self._cursor.fetchone()
 
     def _fetchall(self, sql):

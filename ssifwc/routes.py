@@ -84,7 +84,13 @@ class Router:
 
     def get_epicollect_points_by_uuids(self, body):
 
-        epicollect = self._database.select_epicollect_points_by_uuids(uuids=body['uuids'])
+        uuids = body['uuids']
+
+        if body['version'] == "2":
+            epicollect = self._database.select_epicollect_v2_points_by_uuids(uuids)
+        else:
+            epicollect = self._database.select_epicollect_points_by_uuids(uuids)
+
         points = serialise_points(epicollect)
 
         return self._create_response(points)
@@ -104,19 +110,15 @@ class Router:
 
     def get_metrics_by_epicollect_uuid(self, body):
 
-        metrics = self._database.select_metrics(uuid=body['uuid'])
+        metrics = self._database.select_metrics(uuid=body['uuid'], radius=body['radius'])
         created_at = metrics['created_at']
 
         temperature = [{'value': value, 'name': time} for (value, time) in zip(metrics['temperature'], created_at)]
         conductivity = [{'value': value, 'name': time} for (value, time) in zip(metrics['conductivity'], created_at)]
         ph = [{'value': value, 'name': time} for (value, time) in zip(metrics['ph'], created_at)]
-        flow_rate_1 = [{'value': value, 'name': time} for (value, time) in zip(metrics['flow_rate_1'], created_at)]
-        flow_rate_2 = [{'value': value, 'name': time} for (value, time) in zip(metrics['flow_rate_2'], created_at)]
-        flow_rate_3 = [{'value': value, 'name': time} for (value, time) in zip(metrics['flow_rate_3'], created_at)]
+        flow_rate = [{'value': value, 'name': time} for (value, time) in zip(metrics['flow_rate'], created_at)]
 
-        return self._create_response({'temperature': temperature, 'conductivity': conductivity, 'ph': ph,
-                                      'flow_rate_1': flow_rate_1, 'flow_rate_2': flow_rate_2,
-                                      'flow_rate_3': flow_rate_3})
+        return self._create_response({'temperature': temperature, 'conductivity': conductivity, 'ph': ph, 'flow_rate': flow_rate})
 
     def _create_response(self, body):
 
