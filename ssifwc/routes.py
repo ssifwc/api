@@ -3,7 +3,10 @@ import json
 from enum import Enum
 
 from ssifwc.epicollect import Epicollect
+from ssifwc.precipitation import Precipitation
 from ssifwc.helpers import serialise_polygons, serialise_points, serialise_lines, json_serial
+
+precipitation = Precipitation('http://www.victoriaweather.ca')
 
 
 class Resource(Enum):
@@ -18,6 +21,7 @@ class Resource(Enum):
     Greenwood = 'greenwood'
     Image = 'image'
     Metrics = 'metrics'
+    Precipitation = 'precipitation'
 
 
 class Router:
@@ -119,6 +123,10 @@ class Router:
         flow_rate = [{'value': value, 'name': time} for (value, time) in zip(metrics['flow_rate'], created_at)]
 
         return self._create_response({'temperature': temperature, 'conductivity': conductivity, 'ph': ph, 'flow_rate': flow_rate})
+
+    def get_precipitation(self):
+
+        return self._create_response(precipitation.get_data())
 
     def _create_response(self, body):
 
