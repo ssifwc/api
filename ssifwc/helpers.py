@@ -40,7 +40,12 @@ def _load_line(wkb_line):
 
 def _load_polygon(wkb_polygon):
 
-    return _lng_lat_to_lat_lng(list(wkb.loads(wkb_polygon, hex=True).exterior.coords))
+    geometry = wkb.loads(wkb_polygon, hex=True)
+
+    if geometry.geom_type == 'MultiPolygon':
+        return [_lng_lat_to_lat_lng(list(polygon.exterior.coords)) for polygon in geometry]
+    else:
+        return _lng_lat_to_lat_lng(list(geometry.exterior.coords))
 
 
 def _lng_lat_to_lat_lng(polygon):
