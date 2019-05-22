@@ -24,14 +24,14 @@ class Precipitation:
 
         self._url = url
 
-    def get_data(self):
+    def get_data(self, min_date, max_date):
 
-        precipitation_2019 = self._get_precipitation_for_year('2019')
-        precipitation_2018 = self._get_precipitation_for_year('2018')
+        precipitation_2019 = self._get_precipitation_for_year('2019', min_date, max_date)
+        precipitation_2018 = self._get_precipitation_for_year('2018', min_date, max_date)
 
         return precipitation_2018 + precipitation_2019
 
-    def _get_precipitation_for_year(self, year):
+    def _get_precipitation_for_year(self, year, min_date, max_date):
 
         response = requests.get(f'{self._url}/data/{year}/raintotal_year_0121_{year}.csv')
 
@@ -49,7 +49,7 @@ class Precipitation:
                         day = f'0{day}'
                     value = float(row.split(',')[i + 1].strip())
                     if value == -99:
-                        value = 0
+                        value = None
                 except IndexError:
                     continue
                 try:
@@ -57,7 +57,7 @@ class Precipitation:
                 except ValueError:
                     continue
 
-                if date < datetime.now() and date > datetime(2018, 8, 9):
-                    weather.append({'date': date, 'value': value})
+                if date >= min_date and date <= max_date:
+                    weather.append({'name': date, 'value': value})
 
         return weather

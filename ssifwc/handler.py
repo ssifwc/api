@@ -15,8 +15,7 @@ get_routes = {
     Resource.Faults.value: router.get_faults,
     Resource.Greenwood.value: router.get_greenwood,
     Resource.Springs.value: router.get_springs,
-    Resource.Wells.value: router.get_waterwells,
-    Resource.Precipitation.value: router.get_precipitation
+    Resource.Wells.value: router.get_waterwells
 }
 
 post_routes = {
