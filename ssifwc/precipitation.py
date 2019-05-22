@@ -58,6 +58,6 @@ class Precipitation:
                     continue
 
                 if date < datetime.now() and date > datetime(2018, 8, 9):
-                    weather.append({'date': date.strftime('%d/%m/%Y'), 'value': value})
+                    weather.append({'date': date, 'value': value})
 
         return weather
