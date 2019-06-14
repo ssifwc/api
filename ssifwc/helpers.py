@@ -1,4 +1,5 @@
 from shapely import wkb
+from shapely.geometry.collection import GeometryCollection
 from datetime import datetime, date
 
 
@@ -21,9 +22,12 @@ def _serialise_geometries(geometries, key_name, load_method):
 
     geometry_list = []
     for geometry in geometries:
-        if geometry[key_name]:
-            geometry[key_name] = load_method(geometry[key_name])
-            geometry_list.append(geometry)
+        try:
+            if geometry[key_name]:
+                geometry[key_name] = load_method(geometry[key_name])
+                geometry_list.append(geometry)
+        except AttributeError:
+            continue
 
     return geometry_list
 

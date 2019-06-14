@@ -55,10 +55,6 @@ functions:
           method: get
           cors: true
       - http:
-          path: precipitation
-          method: get
-          cors: true
-      - http:
           path: metrics
           method: post
           cors: true

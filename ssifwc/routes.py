@@ -21,7 +21,6 @@ class Resource(Enum):
     Greenwood = 'greenwood'
     Image = 'image'
     Metrics = 'metrics'
-    Precipitation = 'precipitation'
 
 
 class Router:
@@ -122,11 +121,15 @@ class Router:
         ph = [{'value': value, 'name': time} for (value, time) in zip(metrics['ph'], created_at)]
         flow_rate = [{'value': value, 'name': time} for (value, time) in zip(metrics['flow_rate'], created_at)]
 
-        return self._create_response({'temperature': temperature, 'conductivity': conductivity, 'ph': ph, 'flow_rate': flow_rate})
+        min_date, max_date = temperature[0]['name'], temperature[-1]['name']
 
-    def get_precipitation(self):
-
-        return self._create_response(precipitation.get_data())
+        return self._create_response(
+            {'temperature': temperature,
+             'conductivity': conductivity,
+             'ph': ph,
+             'flow_rate': flow_rate,
+             'precipitation': precipitation.get_data(min_date, max_date)
+             })
 
     def _create_response(self, body):
 
