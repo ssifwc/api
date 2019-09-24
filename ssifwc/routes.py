@@ -120,6 +120,9 @@ class Router:
         conductivity = [{'value': value, 'name': time} for (value, time) in zip(metrics['conductivity'], created_at)]
         ph = [{'value': value, 'name': time} for (value, time) in zip(metrics['ph'], created_at)]
         flow_rate = [{'value': value, 'name': time} for (value, time) in zip(metrics['flow_rate'], created_at)]
+        alkalinity = [{'value': value, 'name': time} for (value, time) in zip(metrics['alkalinity'], created_at)]
+        hardness = [{'value': value, 'name': time} for (value, time) in zip(metrics['hardness'], created_at)]
+        dissolved_oxygen = [{'value': value, 'name': time} for (value, time) in zip(metrics['dissolved_oxygen'], created_at)]
 
         min_date, max_date = temperature[0]['name'], temperature[-1]['name']
 
@@ -128,7 +131,10 @@ class Router:
              'conductivity': conductivity,
              'ph': ph,
              'flow_rate': flow_rate,
-             'precipitation': precipitation.get_data(min_date, max_date)
+             'precipitation': precipitation.get_data(min_date, max_date),
+             'alkalinity': alkalinity,
+             'hardness': hardness,
+             'dissolved_oxygen': dissolved_oxygen
              })
 
     def _create_response(self, body):
