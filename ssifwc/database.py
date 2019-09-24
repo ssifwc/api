@@ -179,9 +179,12 @@ class Database:
                 array_agg(temperature) temperature,
                 array_agg(conductivity) conductivity,
                 array_agg(ph) ph,
-                array_agg(flow_rate) flow_rate
+                array_agg(flow_rate) flow_rate,
+                array_agg(alkalinity) alkalinity,
+                array_agg(hardness) hardness,
+                array_agg(dissolved_oxygen) dissolved_oxygen
             from (
-                select created_at, temperature, conductivity, ph, flow_rate
+                select created_at, temperature, conductivity, ph, flow_rate, alkalinity, hardness, dissolved_oxygen
                 from buffer, v_all_points points
                 where ST_Within(ST_SetSRID(points.where_am_i, 4326), buffer.geom)
                 order by created_at
