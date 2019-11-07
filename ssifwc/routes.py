@@ -19,7 +19,6 @@ class Resource(Enum):
     Aquifers = 'aquifers'
     Faults = 'faults'
     Greenwood = 'greenwood'
-    Image = 'image'
     Metrics = 'metrics'
 
 
@@ -97,19 +96,6 @@ class Router:
         points = serialise_points(epicollect)
 
         return self._create_response(points)
-
-    def get_epicollect_image_by_id(self, body):
-
-        epicollect = Epicollect(
-            base_url=os.environ['EPICOLLECT_BASE_URL'],
-            project_name=os.environ['EPICOLLECT_PROJECT_NAME'],
-            client_id=os.environ['EPICOLLECT_CLIENT_ID'],
-            client_secret=os.environ['EPICOLLECT_CLIENT_SECRET']
-        )
-
-        url, access_token = epicollect.get_media_url(image_id=body['id'])
-
-        return self._create_response({'url': url, 'access_token': access_token})
 
     def get_metrics_by_epicollect_uuid(self, body):
 

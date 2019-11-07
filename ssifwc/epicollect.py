@@ -10,11 +10,9 @@ class Epicollect:
         self._client_id = client_id
         self._client_secret = client_secret
 
-    def get_media_url(self, image_id):
+    def get_media_urls(self, image_ids):
 
-        url = f'{self._media_endpoint}?type=photo&format=entry_original&name={image_id}'
-
-        return url, self._get_token()
+        return [f'{self._media_endpoint}?type=photo&format=entry_original&name={image_id}' for image_id in image_ids]
 
     def _get_token(self):
         params = {
