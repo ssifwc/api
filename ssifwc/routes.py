@@ -19,7 +19,6 @@ class Resource(Enum):
     Aquifers = 'aquifers'
     Faults = 'faults'
     Greenwood = 'greenwood'
-    Image = 'image'
     Metrics = 'metrics'
 
 
@@ -98,19 +97,6 @@ class Router:
 
         return self._create_response(points)
 
-    def get_epicollect_image_by_id(self, body):
-
-        epicollect = Epicollect(
-            base_url=os.environ['EPICOLLECT_BASE_URL'],
-            project_name=os.environ['EPICOLLECT_PROJECT_NAME'],
-            client_id=os.environ['EPICOLLECT_CLIENT_ID'],
-            client_secret=os.environ['EPICOLLECT_CLIENT_SECRET']
-        )
-
-        url, access_token = epicollect.get_media_url(image_id=body['id'])
-
-        return self._create_response({'url': url, 'access_token': access_token})
-
     def get_metrics_by_epicollect_uuid(self, body):
 
         metrics = self._database.select_metrics(uuid=body['uuid'], radius=body['radius'])
@@ -120,6 +106,9 @@ class Router:
         conductivity = [{'value': value, 'name': time} for (value, time) in zip(metrics['conductivity'], created_at)]
         ph = [{'value': value, 'name': time} for (value, time) in zip(metrics['ph'], created_at)]
         flow_rate = [{'value': value, 'name': time} for (value, time) in zip(metrics['flow_rate'], created_at)]
+        alkalinity = [{'value': value, 'name': time} for (value, time) in zip(metrics['alkalinity'], created_at)]
+        hardness = [{'value': value, 'name': time} for (value, time) in zip(metrics['hardness'], created_at)]
+        dissolved_oxygen = [{'value': value, 'name': time} for (value, time) in zip(metrics['dissolved_oxygen'], created_at)]
 
         min_date, max_date = temperature[0]['name'], temperature[-1]['name']
 
@@ -128,7 +117,10 @@ class Router:
              'conductivity': conductivity,
              'ph': ph,
              'flow_rate': flow_rate,
-             'precipitation': precipitation.get_data(min_date, max_date)
+             'precipitation': precipitation.get_data(min_date, max_date),
+             'alkalinity': alkalinity,
+             'hardness': hardness,
+             'dissolved_oxygen': dissolved_oxygen
              })
 
     def _create_response(self, body):
