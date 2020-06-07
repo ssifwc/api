@@ -1,7 +1,6 @@
 import requests
 from datetime import datetime
 
-
 months_lookup = {
     'Jan': '01',
     'Feb': '02',
@@ -20,20 +19,22 @@ months_lookup = {
 
 class Precipitation:
 
-    def __init__(self, url):
-
-        self._url = url
+    def __init__(self):
+        self._url = 'http://www.victoriaweather.ca'
 
     def get_data(self, min_date, max_date):
 
-        precipitation_2019 = self._get_precipitation_for_year('2019', min_date, max_date)
-        precipitation_2018 = self._get_precipitation_for_year('2018', min_date, max_date)
+        precipitation = []
+        years = list(range(datetime(2018, 1, 1).year, datetime.today().year + 1))
+        for the_year in years:
+            precipitation = precipitation + self._get_precipitation_for_year(the_year, min_date, max_date)
 
-        return precipitation_2018 + precipitation_2019
+        return precipitation
 
     def _get_precipitation_for_year(self, year, min_date, max_date):
 
-        response = requests.get(f'{self._url}/data/{year}/raintotal_year_0121_{year}.csv')
+        url = f'{self._url}/data/{year}/raintotal_year_0121_{year}.csv'
+        response = requests.get(url)
 
         rows = response.text.split('\n')
         months = rows[1].split(',')[1:]
@@ -42,7 +43,6 @@ class Precipitation:
         for i, month in enumerate(months):
 
             for row in rows[2:]:
-
                 try:
                     day = row.split(',')[0].strip()
                     if len(day) == 1:

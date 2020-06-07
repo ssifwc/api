@@ -1,5 +1,4 @@
 from shapely import wkb
-from shapely.geometry.collection import GeometryCollection
 from datetime import datetime, date
 
 
