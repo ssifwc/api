@@ -23,11 +23,6 @@ class Database:
         connection = psycopg2.connect(connection_uri)
         return cls(connection, connection.cursor(cursor_factory=RealDictCursor))
 
-    def close(self):
-        self._connection.commit()
-        self._cursor.close()
-        self._connection.close()
-
     def select_watersheds(self):
 
         sql = """
@@ -104,96 +99,110 @@ class Database:
         return self._fetchall(sql)
 
     def select_epicollect_v2_points_by_uuids(self, uuids):
+        try:
+            sql = """
+            select 
+                uuid id,
+                title,
+                coord point,
+                locname named_location_if_known,
+                null water_matters,
+                island_area,
+                created_at,
+                last_sig_precipitation last_significant_precipitation_event,
+                safe_to_work safe_to_work_at_this_location,
+                name name_initials_or_nickname,
+                visit_type type_of_visit,
+                water_body_type,
+                null likely_permenance,
+                rate_of_flow rate_of_flow_qualitative,
+                flow_rate_average,
+                ph,
+                array[photo, photo_of_water_le, photo_view_downst, photos] photos,
+                temperature,
+                conductivity,
+                other_comments
+            from epicollect_observations_v2
+            where uuid::text = any(%s)
+            """
 
-        sql = """
-        select 
-            uuid id,
-            title,
-            coord point,
-            locname named_location_if_known,
-            null water_matters,
-            island_area,
-            created_at,
-            last_sig_precipitation last_significant_precipitation_event,
-            safe_to_work safe_to_work_at_this_location,
-            name name_initials_or_nickname,
-            visit_type type_of_visit,
-            water_body_type,
-            null likely_permenance,
-            rate_of_flow rate_of_flow_qualitative,
-            flow_rate_average,
-            ph,
-            array[photo, photo_of_water_le, photo_view_downst, photos] photos,
-            temperature,
-            conductivity,
-            other_comments
-        from epicollect_observations_v2
-        where uuid::text = any(%s)
-        """
-
-        self._cursor.execute(sql, (uuids,))
-        return self._cursor.fetchall()
+            self._cursor.execute(sql, (uuids,))
+            return self._cursor.fetchall()
+        except:
+            self.rollback()
 
     def select_epicollect_points_by_uuids(self, uuids):
-
-        sql = """
-            SELECT 
-                uuid id, 
-                title, 
-                where_am_i point, 
-                named_location_if_known, 
-                water_matters, 
-                null as island_area, 
-                created_at,
-                last_significant_precipitation_event, 
-                safe_to_work_at_this_location, 
-                name_initials_or_nickname,
-                type_of_visit, 
-                water_body_type, 
-                likely_permenance, 
-                rate_of_flow_qualitative, 
-                flow_rate_quantity_1,
-                flow_rate_quantity_2, 
-                flow_rate_quantity_3, 
-                ph, 
-                array[photo_view_upstr, photo_view_downstream, additional_photo_1, additional_photo_2] photos,
-                temperature, 
-                conductivity, 
-                other_comments
-            FROM epicollect_observations
-            WHERE uuid::text = ANY(%s)
-        """
-        self._cursor.execute(sql, (uuids,))
-        return self._cursor.fetchall()
+        try:
+            sql = """
+                SELECT 
+                    uuid id, 
+                    title, 
+                    where_am_i point, 
+                    named_location_if_known, 
+                    water_matters, 
+                    null as island_area, 
+                    created_at,
+                    last_significant_precipitation_event, 
+                    safe_to_work_at_this_location, 
+                    name_initials_or_nickname,
+                    type_of_visit, 
+                    water_body_type, 
+                    likely_permenance, 
+                    rate_of_flow_qualitative, 
+                    flow_rate_quantity_1,
+                    flow_rate_quantity_2, 
+                    flow_rate_quantity_3, 
+                    ph, 
+                    array[photo_view_upstr, photo_view_downstream, additional_photo_1, additional_photo_2] photos,
+                    temperature, 
+                    conductivity, 
+                    other_comments
+                FROM epicollect_observations
+                WHERE uuid::text = ANY(%s)
+            """
+            self._cursor.execute(sql, (uuids,))
+            return self._cursor.fetchall()
+        except:
+            self.rollback()
 
     def select_metrics(self, uuid, radius):
+        try:
+            sql = """
+                with buffer as (
+                    select ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(where_am_i, 4326), 3857), %s), 4326) geom
+                    from v_all_points
+                    where uuid = %s
+                )
+                select
+                    array_agg(created_at) created_at,
+                    array_agg(temperature) temperature,
+                    array_agg(conductivity) conductivity,
+                    array_agg(ph) ph,
+                    array_agg(flow_rate) flow_rate,
+                    array_agg(alkalinity) alkalinity,
+                    array_agg(hardness) hardness,
+                    array_agg(dissolved_oxygen) dissolved_oxygen
+                from (
+                    select created_at, temperature, conductivity, ph, flow_rate, alkalinity, hardness, dissolved_oxygen
+                    from buffer, v_all_points points
+                    where ST_Within(ST_SetSRID(points.where_am_i, 4326), buffer.geom)
+                    order by created_at
+                ) v
+            """
+            self._cursor.execute(sql, (radius, uuid,))
+            return self._cursor.fetchone()
+        except:
+            self.rollback()
 
-        sql = """
-            with buffer as (
-                select ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(where_am_i, 4326), 3857), %s), 4326) geom
-                from v_all_points
-                where uuid = %s
-            )
-            select
-                array_agg(created_at) created_at,
-                array_agg(temperature) temperature,
-                array_agg(conductivity) conductivity,
-                array_agg(ph) ph,
-                array_agg(flow_rate) flow_rate,
-                array_agg(alkalinity) alkalinity,
-                array_agg(hardness) hardness,
-                array_agg(dissolved_oxygen) dissolved_oxygen
-            from (
-                select created_at, temperature, conductivity, ph, flow_rate, alkalinity, hardness, dissolved_oxygen
-                from buffer, v_all_points points
-                where ST_Within(ST_SetSRID(points.where_am_i, 4326), buffer.geom)
-                order by created_at
-            ) v
-        """
-        self._cursor.execute(sql, (radius, uuid,))
-        return self._cursor.fetchone()
+    def rollback(self):
+        if self._cursor is not None:
+            self._cursor.close()
+        if self._connection is not None:
+            self._connection.rollback()
 
     def _fetchall(self, sql):
-
-        self._cursor.execute(sql)
-        return self._cursor.fetchall()
+        try:
+            self._cursor.execute(sql)
+            return self._cursor.fetchall()
+        except:
+            self.rollback()

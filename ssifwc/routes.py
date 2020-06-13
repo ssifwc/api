@@ -1,12 +1,8 @@
-import os
 import json
 from enum import Enum
 
-from ssifwc.epicollect import Epicollect
 from ssifwc.precipitation import Precipitation
 from ssifwc.helpers import serialise_polygons, serialise_points, serialise_lines, json_serial
-
-precipitation = Precipitation('http://www.victoriaweather.ca')
 
 
 class Resource(Enum):
@@ -25,7 +21,7 @@ class Resource(Enum):
 class Router:
 
     def __init__(self, database):
-
+        self.precipitation = Precipitation()
         self._database = database
 
     def get_watersheds(self):
@@ -117,7 +113,7 @@ class Router:
              'conductivity': conductivity,
              'ph': ph,
              'flow_rate': flow_rate,
-             'precipitation': precipitation.get_data(min_date, max_date),
+             'precipitation': Precipitation().get_data(min_date, max_date),
              'alkalinity': alkalinity,
              'hardness': hardness,
              'dissolved_oxygen': dissolved_oxygen

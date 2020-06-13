@@ -1,4 +1,6 @@
+.serverless
 serverless.env.yml
 node_modules/
 package-lock.json
 package.json
+.idea
