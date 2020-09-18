@@ -83,12 +83,7 @@ class Router:
     def get_epicollect_points_by_uuids(self, body):
 
         uuids = body['uuids']
-
-        if body['version'] == "2":
-            epicollect = self._database.select_epicollect_v2_points_by_uuids(uuids)
-        else:
-            epicollect = self._database.select_epicollect_points_by_uuids(uuids)
-
+        epicollect = self._database.select_epicollect_points_by_uuids(uuids)
         points = serialise_points(epicollect)
 
         return self._create_response(points)
@@ -96,8 +91,8 @@ class Router:
     def get_metrics_by_epicollect_uuid(self, body):
 
         metrics = self._database.select_metrics(uuid=body['uuid'], radius=body['radius'])
-        created_at = metrics['created_at']
 
+        created_at = metrics['created_at']
         temperature = [{'value': value, 'name': time} for (value, time) in zip(metrics['temperature'], created_at)]
         conductivity = [{'value': value, 'name': time} for (value, time) in zip(metrics['conductivity'], created_at)]
         ph = [{'value': value, 'name': time} for (value, time) in zip(metrics['ph'], created_at)]
