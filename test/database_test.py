@@ -3,6 +3,7 @@ import os
 from test.support import EnvironmentVarGuard
 
 from ssifwc.database import Database
+from ssifwc.routes import Router
 
 
 class DatabaseTest(unittest.TestCase):
@@ -26,16 +27,6 @@ class DatabaseTest(unittest.TestCase):
         self.assertIsNotNone(db)
         try:
             print(db.select_epicollect_points_by_uuids({'invalid-uuid-will-crash-query'}))
-        except:
-            db.select_metrics({'1d688da7-2d2c-4f4d-8c9d-5eec4893ad3d'}, 10)
-            self.assertIsNotNone(db)
-            db.select_epicollect_points_by_uuids({'invalid-uuid-will-crash-query'})
-
-    def test_select_epicollect_v2_points_by_uuids_resets_db_connection(self):
-        db = Database.connect(os.environ['DATABASE_CONNECTION_URI'])
-        self.assertIsNotNone(db)
-        try:
-            print(db.select_epicollect_v2_points_by_uuids({'invalid-uuid-will-crash-query'}))
         except:
             db.select_metrics({'1d688da7-2d2c-4f4d-8c9d-5eec4893ad3d'}, 10)
             self.assertIsNotNone(db)

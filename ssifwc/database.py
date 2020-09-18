@@ -114,7 +114,7 @@ class Database:
                 json_record ->> 'visit_type' AS type_of_visit,
                 json_record ->> 'water_body' AS water_body_type,
                 json_record ->> 'rate_of_flow' AS rate_of_flow_qualitative,
-                flow_rate AS flow_rate_average,
+                calculated_flow_rate AS flow_rate_average,
                 json_record ->> 'ph_oakton' AS ph,
                 array[json_record ->> 'photo_record', json_record ->> 'photo_pond', json_record ->> 'photo_ds', json_record ->> 'photo_us'] AS photos,
                 json_record ->> 'temperature' AS temperature,
@@ -148,7 +148,7 @@ class Database:
                     array_agg(dissolved_oxygen) dissolved_oxygen
                 from (
                     select created_at, temperature, conductivity, ph, flow_rate, alkalinity, hardness, dissolved_oxygen
-                    from buffer, v_all_points points
+                    from buffer, v_all_points points    
                     where ST_Within(ST_SetSRID(points.where_am_i, 4326), buffer.geom)
                     order by created_at
                 ) v
