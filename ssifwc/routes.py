@@ -1,9 +1,7 @@
 import json
 from enum import Enum
-
 from ssifwc.precipitation import Precipitation
 from ssifwc.helpers import serialise_polygons, serialise_points, serialise_lines, json_serial
-
 
 class Resource(Enum):
 
@@ -88,9 +86,12 @@ class Router:
 
         return self._create_response(points)
 
-    def get_metrics_by_epicollect_uuid(self, body):
+    def get_metrics_by_coordinates_and_radius(self, body):
 
-        metrics = self._database.select_metrics(uuid=body['uuid'], radius=body['radius'])
+        metrics = self._database.select_metrics(
+            longitude=float(body['longitude']),
+            latitude=float(body['latitude']),
+            radius=body['radius'])
 
         created_at = metrics['created_at']
         temperature = [{'value': value, 'name': time} for (value, time) in zip(metrics['temperature'], created_at)]
@@ -103,7 +104,7 @@ class Router:
 
         min_date, max_date = temperature[0]['name'], temperature[-1]['name']
 
-        return self._create_response(
+        response = self._create_response(
             {'temperature': temperature,
              'conductivity': conductivity,
              'ph': ph,
@@ -113,6 +114,7 @@ class Router:
              'hardness': hardness,
              'dissolved_oxygen': dissolved_oxygen
              })
+        return response
 
     def _create_response(self, body):
 

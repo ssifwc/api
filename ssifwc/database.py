@@ -1,4 +1,5 @@
 import psycopg2
+import sys
 from psycopg2.extras import RealDictCursor
 
 
@@ -63,13 +64,14 @@ class Database:
     def select_epicollect(self):
 
         sql = """
-        SELECT uuid id, title, where_am_i point, ph, temperature, conductivity, '1' epicollect_version
-        FROM epicollect_observations
-        union
-        select uuid id, title, coord point, cast(nullif(ph, '') as double precision), cast(nullif(temperature, '') as double precision), cast(nullif(conductivity, '') as double precision), '2' epicollect_version
-        from epicollect_observations_v2
+            SELECT uuid id,
+                   json_record ->> 'title' as title,
+                   coordinates point,
+                   json_record ->> 'ph' as ph,
+                   json_record ->> 'temperature_water' as temperature,
+                   json_record ->> 'conductivity' as conductivity
+            FROM field_observations
         """
-
         return self._fetchall(sql)
 
     def select_aquifers(self):
@@ -104,7 +106,7 @@ class Database:
             select
                 uuid AS id,
                 json_record ->> 'title' AS title,
-                json_record ->> 'coordinates' AS point,
+                coordinates AS point,
                 json_record ->> 'monitor_location' AS named_location_if_known,
                 null island_area,
                 json_record ->> 'created_at' AS created_at,
@@ -117,7 +119,7 @@ class Database:
                 calculated_flow_rate AS flow_rate_average,
                 json_record ->> 'ph_oakton' AS ph,
                 array[json_record ->> 'photo_record', json_record ->> 'photo_pond', json_record ->> 'photo_ds', json_record ->> 'photo_us'] AS photos,
-                json_record ->> 'temperature' AS temperature,
+                json_record ->> 'temperature_water' AS temperature,
                 json_record ->> 'conductivity' AS conductivity,
                 json_record ->> 'other_comments' AS other_comments
             from field_observations
@@ -127,15 +129,16 @@ class Database:
             self._cursor.execute(sql, (uuids,))
             return self._cursor.fetchall()
         except:
+            print("Unexpected error:", sys.exc_info()[0])
             self.rollback()
 
-    def select_metrics(self, uuid, radius):
+    def select_metrics(self, longitude, latitude, radius):
+
         try:
             sql = """
                 with buffer as (
-                    select ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(where_am_i, 4326), 3857), %s), 4326) geom
+                    select distinct ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(ST_Point(%s,%s), 4326), 3857), %s), 4326) geom
                     from v_all_points
-                    where uuid = %s
                 )
                 select
                     array_agg(created_at) created_at,
@@ -153,9 +156,10 @@ class Database:
                     order by created_at
                 ) v
             """
-            self._cursor.execute(sql, (radius, uuid,))
+            self._cursor.execute(sql, (longitude, latitude, radius,))
             return self._cursor.fetchone()
         except:
+            print("Unexpected error:", sys.exc_info()[0])
             self.rollback()
 
     def rollback(self):
