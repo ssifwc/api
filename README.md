@@ -35,9 +35,7 @@ Create a `serverless.env.yml` file which is used as part of the deployment proce
 ```buildoutcfg
 dev:
   DATABASE_CONNECTION_URI: xxxxx
-  EPICOLLECT_BASE_URL: xxxxx
-  EPICOLLECT_PROJECT_NAME: xxxxx
-
+  EPICOLLECT_BASE_URL: xxxxx**
 ```
 
 ## Deployment

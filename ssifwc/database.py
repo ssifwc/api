@@ -1,4 +1,5 @@
 import psycopg2
+import sys
 from psycopg2.extras import RealDictCursor
 
 
@@ -62,15 +63,20 @@ class Database:
 
     def select_epicollect(self):
 
-        sql = """
-        SELECT uuid id, title, where_am_i point, ph, temperature, conductivity, '1' epicollect_version
-        FROM epicollect_observations
-        union
-        select uuid id, title, coord point, cast(nullif(ph, '') as double precision), cast(nullif(temperature, '') as double precision), cast(nullif(conductivity, '') as double precision), '2' epicollect_version
-        from epicollect_observations_v2
-        """
-
-        return self._fetchall(sql)
+        try:
+            sql = """
+                SELECT uuid id,
+                       json_record ->> 'title' as title,
+                       coordinates as point,
+                       json_record ->> 'ph' as ph,
+                       json_record ->> 'temperature_water' as temperature,
+                       json_record ->> 'conductivity' as conductivity
+                FROM field_observations
+            """
+            return self._fetchall(sql)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+            self.rollback()
 
     def select_aquifers(self):
 
@@ -98,80 +104,46 @@ class Database:
 
         return self._fetchall(sql)
 
-    def select_epicollect_v2_points_by_uuids(self, uuids):
+    def select_epicollect_points_by_uuids(self, uuids):
         try:
             sql = """
-            select 
-                uuid id,
-                title,
-                coord point,
-                locname named_location_if_known,
-                null water_matters,
-                island_area,
-                created_at,
-                last_sig_precipitation last_significant_precipitation_event,
-                safe_to_work safe_to_work_at_this_location,
-                name name_initials_or_nickname,
-                visit_type type_of_visit,
-                water_body_type,
-                null likely_permenance,
-                rate_of_flow rate_of_flow_qualitative,
-                flow_rate_average,
-                ph,
-                array[photo, photo_of_water_le, photo_view_downst, photos] photos,
-                temperature,
-                conductivity,
-                other_comments
-            from epicollect_observations_v2
+            select
+                uuid AS id,
+                json_record ->> 'title' AS title,
+                coordinates AS point,
+                json_record ->> 'monitor_location' AS named_location_if_known,
+                json_record ->> 'created_at' AS created_at,
+                json_record ->> 'monitor_time' AS monitor_time,
+                json_record ->> 'monitor_date' AS monitor_date,
+                json_record ->> 'last_sign_precip' AS last_significant_precipitation_event,
+                json_record ->> 'safe_to_work' AS safe_to_work_at_this_location,
+                json_record ->> 'name' AS name_initials_or_nickname,
+                json_record ->> 'visit_type' AS type_of_visit,
+                json_record ->> 'water_body' AS water_body_type,
+                json_record ->> 'rate_of_flow' AS rate_of_flow_qualitative,
+                calculated_flow_rate AS flow_rate_average,
+                json_record ->> 'ph_oakton' AS ph,
+                array[json_record ->> 'photo_record', json_record ->> 'photo_pond', json_record ->> 'photo_ds', json_record ->> 'photo_us'] AS photos,
+                json_record ->> 'temperature_water' AS temperature,
+                json_record ->> 'conductivity' AS conductivity,
+                json_record ->> 'other_comments' AS other_comments
+            from field_observations
             where uuid::text = any(%s)
             """
 
             self._cursor.execute(sql, (uuids,))
             return self._cursor.fetchall()
         except:
+            print("Unexpected error:", sys.exc_info()[0])
             self.rollback()
 
-    def select_epicollect_points_by_uuids(self, uuids):
-        try:
-            sql = """
-                SELECT 
-                    uuid id, 
-                    title, 
-                    where_am_i point, 
-                    named_location_if_known, 
-                    water_matters, 
-                    null as island_area, 
-                    created_at,
-                    last_significant_precipitation_event, 
-                    safe_to_work_at_this_location, 
-                    name_initials_or_nickname,
-                    type_of_visit, 
-                    water_body_type, 
-                    likely_permenance, 
-                    rate_of_flow_qualitative, 
-                    flow_rate_quantity_1,
-                    flow_rate_quantity_2, 
-                    flow_rate_quantity_3, 
-                    ph, 
-                    array[photo_view_upstr, photo_view_downstream, additional_photo_1, additional_photo_2] photos,
-                    temperature, 
-                    conductivity, 
-                    other_comments
-                FROM epicollect_observations
-                WHERE uuid::text = ANY(%s)
-            """
-            self._cursor.execute(sql, (uuids,))
-            return self._cursor.fetchall()
-        except:
-            self.rollback()
+    def select_metrics(self, longitude, latitude, radius):
 
-    def select_metrics(self, uuid, radius):
         try:
             sql = """
                 with buffer as (
-                    select ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(where_am_i, 4326), 3857), %s), 4326) geom
+                    select distinct ST_Transform(ST_Buffer(ST_Transform(ST_SetSRID(ST_Point(%s,%s), 4326), 3857), %s), 4326) geom
                     from v_all_points
-                    where uuid = %s
                 )
                 select
                     array_agg(created_at) created_at,
@@ -184,14 +156,15 @@ class Database:
                     array_agg(dissolved_oxygen) dissolved_oxygen
                 from (
                     select created_at, temperature, conductivity, ph, flow_rate, alkalinity, hardness, dissolved_oxygen
-                    from buffer, v_all_points points
+                    from buffer, v_all_points points    
                     where ST_Within(ST_SetSRID(points.where_am_i, 4326), buffer.geom)
                     order by created_at
                 ) v
             """
-            self._cursor.execute(sql, (radius, uuid,))
+            self._cursor.execute(sql, (longitude, latitude, radius,))
             return self._cursor.fetchone()
         except:
+            print("Unexpected error:", sys.exc_info()[0])
             self.rollback()
 
     def rollback(self):

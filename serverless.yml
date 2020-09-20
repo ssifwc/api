@@ -62,7 +62,6 @@ functions:
     environment:
       DATABASE_CONNECTION_URI: ${file(./serverless.env.yml):${self:provider.stage}.DATABASE_CONNECTION_URI}
       EPICOLLECT_BASE_URL: ${file(./serverless.env.yml):${self:provider.stage}.EPICOLLECT_BASE_URL}
-      EPICOLLECT_PROJECT_NAME: ${file(./serverless.env.yml):${self:provider.stage}.EPICOLLECT_PROJECT_NAME}
 
 plugins:
   - serverless-python-requirements
