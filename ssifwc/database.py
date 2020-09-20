@@ -63,16 +63,20 @@ class Database:
 
     def select_epicollect(self):
 
-        sql = """
-            SELECT uuid id,
-                   json_record ->> 'title' as title,
-                   coordinates point,
-                   json_record ->> 'ph' as ph,
-                   json_record ->> 'temperature_water' as temperature,
-                   json_record ->> 'conductivity' as conductivity
-            FROM field_observations
-        """
-        return self._fetchall(sql)
+        try:
+            sql = """
+                SELECT uuid id,
+                       json_record ->> 'title' as title,
+                       coordinates as point,
+                       json_record ->> 'ph' as ph,
+                       json_record ->> 'temperature_water' as temperature,
+                       json_record ->> 'conductivity' as conductivity
+                FROM field_observations
+            """
+            return self._fetchall(sql)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+            self.rollback()
 
     def select_aquifers(self):
 
@@ -108,8 +112,9 @@ class Database:
                 json_record ->> 'title' AS title,
                 coordinates AS point,
                 json_record ->> 'monitor_location' AS named_location_if_known,
-                null island_area,
                 json_record ->> 'created_at' AS created_at,
+                json_record ->> 'monitor_time' AS monitor_time,
+                json_record ->> 'monitor_date' AS monitor_date,
                 json_record ->> 'last_sign_precip' AS last_significant_precipitation_event,
                 json_record ->> 'safe_to_work' AS safe_to_work_at_this_location,
                 json_record ->> 'name' AS name_initials_or_nickname,

@@ -18,6 +18,11 @@ class DatabaseTest(unittest.TestCase):
         body = {"uuids": "{1d688da7-2d2c-4f4d-8c9d-5eec4893ad3d}"}
         print(Router(db).get_epicollect_points_by_uuids(body))
 
+    def test_epicollect(self):
+        db = Database.connect(os.environ['DATABASE_CONNECTION_URI'])
+        self.assertIsNotNone(db)
+        print(Router(db).get_epicollect())
+
     def test_metrics(self):
         db = Database.connect(os.environ['DATABASE_CONNECTION_URI'])
         self.assertIsNotNone(db)
